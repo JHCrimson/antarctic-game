@@ -15,13 +15,19 @@ export interface GameState {
   base: HexKey;
   pole: HexKey;
   party: { at: HexKey; carried: Supplies; capacity: number; };
+  caches: Record<HexKey, Supplies>; // includes the home base stores
   log: string[];                  // events, newest last
 }
 
-export type Action = { kind: 'move'; to: HexKey };
+export type Action =
+  | { kind: 'move'; to: HexKey }
+  // Move crates between the sledge and the cache on the party's hex.
+  // Positive numbers pick up from the cache, negative numbers drop into it.
+  | { kind: 'transfer'; food: number; fuel: number };
 
 export const CAPACITY = 30;
 export const STARTING_LOAD: Supplies = { food: 26, fuel: 4 };
+export const BASE_STOCKPILE: Supplies = { food: 120, fuel: 30 }; // includes the starting load
 
 export function newGame(seed = Date.now(), rows: readonly string[] = FIXED_MAP): GameState {
   const cols = rows[0].length;
@@ -35,6 +41,12 @@ export function newGame(seed = Date.now(), rows: readonly string[] = FIXED_MAP):
     base,
     pole: key(fromOffset(mid, rows.length - 1)),
     party: { at: base, carried: { ...STARTING_LOAD }, capacity: CAPACITY },
+    caches: {
+      [base]: {
+        food: BASE_STOCKPILE.food - STARTING_LOAD.food,
+        fuel: BASE_STOCKPILE.fuel - STARTING_LOAD.fuel,
+      },
+    },
     log: [],
   };
 }

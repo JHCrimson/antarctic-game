@@ -25,6 +25,30 @@
       <div id="panel-title">Tap a highlighted hex to see what it costs</div>
       <div id="panel-detail"></div>
     </footer>
+    <section id="sheet" hidden aria-labelledby="sheet-title">
+      <div class="sheet-head">
+        <h2 id="sheet-title">Cache</h2>
+        <button id="sheet-close" type="button">Done</button>
+      </div>
+      <p id="sheet-summary"></p>
+      <p class="sheet-help">On the sledge: − leaves crates here, + loads them.</p>
+      <div class="sheet-row" data-res="food">
+        <span class="sheet-name">Food</span>
+        <button type="button" data-d="-5">−5</button>
+        <button type="button" data-d="-1">−1</button>
+        <span class="sheet-amount" id="sheet-food">0</span>
+        <button type="button" data-d="1">+1</button>
+        <button type="button" data-d="5">+5</button>
+      </div>
+      <div class="sheet-row" data-res="fuel">
+        <span class="sheet-name">Fuel</span>
+        <button type="button" data-d="-5">−5</button>
+        <button type="button" data-d="-1">−1</button>
+        <span class="sheet-amount" id="sheet-fuel">0</span>
+        <button type="button" data-d="1">+1</button>
+        <button type="button" data-d="5">+5</button>
+      </div>
+    </section>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

@@ -57,5 +57,29 @@ export function apply(state: GameState, action: Action): GameState {
       }
       return { ...state, turn, rng, log, party: { ...state.party, at: action.to, carried } };
     }
+    case 'transfer': {
+      if (!canTransfer(state, action.food, action.fuel)) return state;
+      const at = state.party.at;
+      const cache = state.caches[at] ?? { food: 0, fuel: 0 };
+      const left = { food: cache.food - action.food, fuel: cache.fuel - action.fuel };
+      const caches: Record<HexKey, Supplies> = { ...state.caches, [at]: left };
+      if (left.food === 0 && left.fuel === 0 && at !== state.base) delete caches[at];
+      const carried = {
+        food: state.party.carried.food + action.food,
+        fuel: state.party.carried.fuel + action.fuel,
+      };
+      return { ...state, caches, party: { ...state.party, carried } };
+    }
   }
+}
+
+// Whether crates can move between the sledge and the cache on the party's hex.
+export function canTransfer(state: GameState, food: number, fuel: number): boolean {
+  if (!Number.isInteger(food) || !Number.isInteger(fuel) || (food === 0 && fuel === 0)) return false;
+  const cache = state.caches[state.party.at] ?? { food: 0, fuel: 0 };
+  const { carried, capacity } = state.party;
+  const after = { food: carried.food + food, fuel: carried.fuel + fuel };
+  return after.food >= 0 && after.fuel >= 0
+    && cache.food - food >= 0 && cache.fuel - fuel >= 0
+    && after.food + after.fuel <= capacity;
 }
