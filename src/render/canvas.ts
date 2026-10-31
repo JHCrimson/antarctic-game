@@ -9,6 +9,7 @@ const COLOURS = {
   base: '#8a4b2a',
   party: '#c0392b',
   pole: '#d4a017',
+  cache: '#e67e22',
 };
 
 const TERRAIN: Record<Terrain, string> = {
@@ -70,12 +71,15 @@ export class Renderer {
       this.hex(p.x, p.y, size - 2, 'rgba(47, 127, 216, 0.35)', COLOURS.move, 4);
     }
 
+    for (const k of Object.keys(state.caches) as HexKey[]) {
+      if (k !== state.base) this.flag(view.toScreen(fromKey(k)), size);
+    }
     this.base(view.toScreen(fromKey(state.base)), size);
     this.pole(view.toScreen(fromKey(state.pole)), size);
     const at = view.toScreen(party);
-    // At the base, sit beside the hut so both stay visible.
-    const onBase = state.party.at === state.base;
-    this.party(onBase ? { x: at.x + size * 0.4, y: at.y + size * 0.35 } : at, onBase ? size * 0.75 : size);
+    // At the base or a cache, sit beside the hut or flag so both stay visible.
+    const beside = state.party.at in state.caches;
+    this.party(beside ? { x: at.x + size * 0.4, y: at.y + size * 0.35 } : at, beside ? size * 0.75 : size);
   }
 
   private hex(cx: number, cy: number, size: number, fill: string, stroke: string, width: number): void {
@@ -134,6 +138,25 @@ export class Renderer {
         ctx.stroke();
         break;
     }
+  }
+
+  // A cache: a small orange flag on a pole, to the left of the hex centre.
+  private flag(p: { x: number; y: number }, size: number): void {
+    const { ctx } = this;
+    const x = p.x - size * 0.35, top = p.y - size * 0.55, bottom = p.y + size * 0.45;
+    ctx.strokeStyle = '#3d2b1f';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x, bottom);
+    ctx.lineTo(x, top);
+    ctx.stroke();
+    ctx.fillStyle = COLOURS.cache;
+    ctx.beginPath();
+    ctx.moveTo(x, top);
+    ctx.lineTo(x + size * 0.6, top + size * 0.2);
+    ctx.lineTo(x, top + size * 0.4);
+    ctx.closePath();
+    ctx.fill();
   }
 
   private base(p: { x: number; y: number }, size: number): void {
