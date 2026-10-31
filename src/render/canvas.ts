@@ -1,4 +1,5 @@
-import { corners, fromKey, neighbours, key, type HexKey } from '../core/hex';
+import { corners, fromKey, type HexKey } from '../core/hex';
+import { moveTargets } from '../core/rules';
 import type { GameState, Terrain } from '../core/state';
 import type { View } from './view';
 
@@ -51,35 +52,32 @@ export class Renderer {
     ctx.fillStyle = COLOURS.sea;
     ctx.fillRect(0, 0, view.width, view.height);
 
-    const party = fromKey(state.party.at);
-    const moves = new Set(neighbours(party).map(key).filter(k => k in state.map.tiles && state.map.tiles[k].terrain !== 'ridge'));
+    const moves = moveTargets(state).filter(k => state.map.tiles[k].terrain !== 'ridge');
+    // The map wraps east-west, so each thing is drawn at every copy that is on screen.
+    const each = (k: HexKey, draw: (p: { x: number; y: number }) => void) => {
+      const p = view.toScreen(fromKey(k));
+      if (p.y < -size * 2 || p.y > view.height + size * 2) return;
+      for (const x of view.copiesX(p.x)) draw({ x, y: p.y });
+    };
 
     for (const [k, tile] of Object.entries(state.map.tiles)) {
-      const p = view.toScreen(fromKey(k as keyof typeof state.map.tiles));
-      if (p.y < -size * 2 || p.y > view.height + size * 2) continue;
-      this.hex(p.x, p.y, size, TERRAIN[tile.terrain], COLOURS.edge, 1);
-      this.mark(tile.terrain, p.x, p.y, size);
+      each(k as HexKey, p => {
+        this.hex(p.x, p.y, size, TERRAIN[tile.terrain], COLOURS.edge, 1);
+        this.mark(tile.terrain, p.x, p.y, size);
+      });
     }
 
-    for (const k of moves) {
-      const p = view.toScreen(fromKey(k));
-      this.hex(p.x, p.y, size - 2, 'rgba(47, 127, 216, 0.14)', COLOURS.move, 2);
-    }
-
-    if (preview) {
-      const p = view.toScreen(fromKey(preview));
-      this.hex(p.x, p.y, size - 2, 'rgba(47, 127, 216, 0.35)', COLOURS.move, 4);
-    }
+    for (const k of moves) each(k, p => this.hex(p.x, p.y, size - 2, 'rgba(47, 127, 216, 0.14)', COLOURS.move, 2));
+    if (preview) each(preview, p => this.hex(p.x, p.y, size - 2, 'rgba(47, 127, 216, 0.35)', COLOURS.move, 4));
 
     for (const k of Object.keys(state.caches) as HexKey[]) {
-      if (k !== state.base) this.flag(view.toScreen(fromKey(k)), size);
+      if (k !== state.base) each(k, p => this.flag(p, size));
     }
-    this.base(view.toScreen(fromKey(state.base)), size);
-    this.pole(view.toScreen(fromKey(state.pole)), size);
-    const at = view.toScreen(party);
+    each(state.base, p => this.base(p, size));
+    each(state.pole, p => this.pole(p, size));
     // At the base or a cache, sit beside the hut or flag so both stay visible.
     const beside = state.party.at in state.caches;
-    this.party(beside ? { x: at.x + size * 0.4, y: at.y + size * 0.35 } : at, beside ? size * 0.75 : size);
+    each(state.party.at, at => this.party(beside ? { x: at.x + size * 0.4, y: at.y + size * 0.35 } : at, beside ? size * 0.75 : size));
   }
 
   private hex(cx: number, cy: number, size: number, fill: string, stroke: string, width: number): void {

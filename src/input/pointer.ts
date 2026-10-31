@@ -2,17 +2,17 @@ const DRAG_THRESHOLD = 8; // px of movement before a touch counts as a drag
 
 export interface PointerHandlers {
   tap(x: number, y: number): void;
-  drag(dy: number): void;
+  drag(dx: number, dy: number): void;
 }
 
 // One code path for touch and mouse: short touches are taps, longer moves scroll.
 export function attachPointer(el: HTMLElement, handlers: PointerHandlers): void {
-  let startY = 0, lastY = 0, startX = 0, dragging = false, active = false;
+  let startY = 0, lastY = 0, startX = 0, lastX = 0, dragging = false, active = false;
 
   el.addEventListener('pointerdown', e => {
     active = true;
     dragging = false;
-    startX = e.clientX;
+    startX = lastX = e.clientX;
     startY = lastY = e.clientY;
     el.setPointerCapture(e.pointerId);
   });
@@ -21,7 +21,8 @@ export function attachPointer(el: HTMLElement, handlers: PointerHandlers): void 
     if (!active) return;
     if (!dragging && Math.hypot(e.clientX - startX, e.clientY - startY) > DRAG_THRESHOLD) dragging = true;
     if (dragging) {
-      handlers.drag(lastY - e.clientY);
+      handlers.drag(lastX - e.clientX, lastY - e.clientY);
+      lastX = e.clientX;
       lastY = e.clientY;
     }
   });

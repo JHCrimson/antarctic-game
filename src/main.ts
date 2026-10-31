@@ -1,6 +1,6 @@
 import { registerSW } from 'virtual:pwa-register';
 import { Store } from './app/store';
-import { distance, fromKey, key, type HexKey } from './core/hex';
+import { fromKey, key, wrap, wrappedDistance, type HexKey } from './core/hex';
 import { TERRAIN, canTransfer, checkMove, score } from './core/rules';
 import { newExpedition } from './core/generate';
 import { type GameState, type Supplies } from './core/state';
@@ -149,7 +149,7 @@ store.subscribe(state => {
 });
 
 function tap(x: number, y: number): void {
-  const target = key(view.fromScreen(x, y));
+  const target = key(wrap(view.fromScreen(x, y), store.state.map.cols));
   if (!(target in store.state.map.tiles)) return;
   if (!sheet.hidden) return closeSheet();
   if (target === store.state.party.at) return openSheet();
@@ -164,7 +164,7 @@ function tap(x: number, y: number): void {
 
 attachPointer(canvas, {
   tap,
-  drag: dy => { view.scrollBy(dy); render(); },
+  drag: (dx, dy) => { view.scrollBy(dx, dy); render(); },
 });
 
 function startNew(seed?: number): void {
@@ -186,7 +186,7 @@ function showResult(s: GameState): void {
   const base = s.caches[s.base] ?? { food: 0, fuel: 0 };
   const { food, fuel } = s.party.carried;
   const goal = s.party.reachedPole ? s.base : s.pole;
-  const away = distance(fromKey(s.party.at), fromKey(goal));
+  const away = wrappedDistance(fromKey(s.party.at), fromKey(goal), s.map.cols);
   const short = s.party.reachedPole ? 'from home, on the way back from the pole' : 'short of the pole';
   $('result-title').textContent = won ? 'Home from the South Pole!' : 'Expedition lost';
   $('result-summary').textContent = won

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { distance, fromOffset, fromPixel, isNeighbour, neighbours, toOffset, toPixel } from './hex';
+import { distance, fromOffset, fromPixel, isNeighbour, neighbours, toOffset, toPixel, wrap, wrappedDistance } from './hex';
 
 describe('hex', () => {
   it('has six neighbours, each one step away', () => {
@@ -34,5 +34,18 @@ describe('hex', () => {
       expect(fromPixel(p.x, p.y, size)).toEqual(h);
       expect(fromPixel(p.x + size * 0.6, p.y + size * 0.3, size)).toEqual(h);
     }
+  });
+});
+
+describe('wrapping', () => {
+  it('brings any column back into the map', () => {
+    expect(wrap(fromOffset(9, 3), 9)).toEqual(fromOffset(0, 3));
+    expect(wrap(fromOffset(-1, 4), 9)).toEqual(fromOffset(8, 4));
+    expect(wrap(fromOffset(4, 4), 9)).toEqual(fromOffset(4, 4));
+  });
+
+  it('measures distance the short way round', () => {
+    expect(wrappedDistance(fromOffset(0, 5), fromOffset(8, 5), 9)).toBe(1);
+    expect(wrappedDistance(fromOffset(1, 5), fromOffset(7, 5), 9)).toBe(3);
   });
 });
