@@ -11,19 +11,32 @@ function game(col: number, row: number, food: number, fuel: number): GameState {
 }
 
 describe('winning', () => {
-  it('happens on reaching the pole, with a score', () => {
-    const s = { ...game(4, 38, 10, 5), turn: 60 };
-    const won = apply(s, { kind: 'move', to: s.pole });
+  it('needs the party to reach the pole and then get back to base', () => {
+    const s = game(4, 28, 10, 5);
+    const atPole = apply(s, { kind: 'move', to: s.pole });
+    expect(atPole.status).toBe('playing');
+    expect(atPole.party.reachedPole).toBe(true);
+    expect(atPole.log.at(-1)?.kind).toBe('pole');
+
+    // Teleport next to base for the last step home.
+    const nearHome = { ...atPole, turn: 60, party: { ...atPole.party, at: at(4, 1) } };
+    const won = apply(nearHome, { kind: 'move', to: s.base });
     expect(won.status).toBe('won');
     expect(won.log.at(-1)).toMatchObject({ kind: 'won', turn: 61 });
-    // 10 points per crate (base stores 126 + 34, sledge 9 + 4) minus 61 turns
-    expect(score(won)).toBe(10 * (126 + 34 + 9 + 4) - 61);
+    // 10 points per crate (base stores 116 + 44, sledge 9 + 4) minus 61 turns
+    expect(score(won)).toBe(10 * (116 + 44 + 9 + 4) - 61);
+  });
+
+  it('does not count coming home without having reached the pole', () => {
+    const s = apply(game(4, 1, 10, 5), { kind: 'move', to: at(4, 0) });
+    expect(s.status).toBe('playing');
   });
 
   it('ends the game: no more moves or transfers', () => {
-    const s = game(4, 38, 10, 5);
-    const won = apply(s, { kind: 'move', to: s.pole });
-    expect(apply(won, { kind: 'move', to: at(4, 38) })).toBe(won);
+    const s = { ...game(4, 1, 10, 5), party: { ...game(4, 1, 10, 5).party, reachedPole: true } };
+    const won = apply(s, { kind: 'move', to: s.base });
+    expect(won.status).toBe('won');
+    expect(apply(won, { kind: 'move', to: at(4, 1) })).toBe(won);
     expect(apply(won, { kind: 'transfer', food: -1, fuel: 0 })).toBe(won);
   });
 });
@@ -45,8 +58,8 @@ describe('losing', () => {
 
   it('counts fuel-only ground as a dead end when there is no fuel anywhere near', () => {
     // On the plateau with food but no fuel: every neighbour costs fuel.
-    expect(isStranded(game(4, 30, 10, 0))).toBe(true);
-    expect(isStranded(game(4, 30, 10, 1))).toBe(false);
+    expect(isStranded(game(4, 23, 10, 0))).toBe(true);
+    expect(isStranded(game(4, 23, 10, 1))).toBe(false);
   });
 });
 

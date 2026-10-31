@@ -25,7 +25,7 @@ describe('base stores', () => {
     expect(lighter.party.carried.food).toBe(28);
     const swapped = apply(lighter, { kind: 'transfer', food: 0, fuel: 6 });
     expect(swapped.party.carried).toEqual({ food: 28, fuel: 12 });
-    expect(swapped.caches[s.base]).toEqual({ food: 132, fuel: 28 });
+    expect(swapped.caches[s.base]).toEqual({ food: 122, fuel: 38 });
   });
 });
 

@@ -39,14 +39,14 @@ describe('move', () => {
   });
 
   it('blocks mountain ridges but lets you through a pass for 2 food and 1 fuel', () => {
-    const s = game(2, 13);
-    expect(checkMove(s, at(3, 14))).toMatchObject({ ok: false, reason: 'impassable' });
-    expect(apply(s, { kind: 'move', to: at(2, 14) }).party.carried).toEqual({ food: 18, fuel: 4 });
+    const s = game(2, 9);
+    expect(checkMove(s, at(3, 10))).toMatchObject({ ok: false, reason: 'impassable' });
+    expect(apply(s, { kind: 'move', to: at(2, 10) }).party.carried).toEqual({ food: 18, fuel: 4 });
   });
 
-  it('needs fuel to climb onto the plateau', () => {
-    expect(checkMove(game(4, 23, 10, 0), at(4, 24))).toMatchObject({ ok: false, reason: 'no-fuel' });
-    expect(checkMove(game(4, 23, 10, 1), at(4, 24)).ok).toBe(true);
+  it('needs fuel, not food, to cross the plateau', () => {
+    expect(checkMove(game(4, 17, 10, 0), at(4, 18))).toMatchObject({ ok: false, reason: 'no-fuel' });
+    expect(checkMove(game(4, 17, 10, 1), at(4, 18)).ok).toBe(true);
   });
 
   it('cannot move without enough food', () => {
@@ -59,7 +59,7 @@ describe('crevasses', () => {
   it('sometimes cost 2 extra food, and log it', () => {
     let lost = 0;
     for (let seed = 1; seed <= 400; seed++) {
-      const next = apply(game(0, 7, 20, 5, seed), { kind: 'move', to: at(0, 8) });
+      const next = apply(game(0, 5, 20, 5, seed), { kind: 'move', to: at(0, 6) });
       if (next.party.carried.food === 17) {
         lost++;
         expect(next.log.at(-1)?.text).toMatch(/crevasse/);
@@ -72,8 +72,8 @@ describe('crevasses', () => {
   });
 
   it('give the same result for the same seed', () => {
-    const a = apply(game(0, 7, 20, 5, 42), { kind: 'move', to: at(0, 8) });
-    const b = apply(game(0, 7, 20, 5, 42), { kind: 'move', to: at(0, 8) });
+    const a = apply(game(0, 5, 20, 5, 42), { kind: 'move', to: at(0, 6) });
+    const b = apply(game(0, 5, 20, 5, 42), { kind: 'move', to: at(0, 6) });
     expect(a).toEqual(b);
   });
 });
@@ -85,11 +85,11 @@ describe('newGame', () => {
     expect(fromKey(s.base).r).toBe(0);
     expect(s.map.tiles[s.base].terrain).toBe('coast');
     expect(fromKey(s.pole).r).toBe(s.map.rows - 1);
-    expect(Object.keys(s.map.tiles)).toHaveLength(9 * 40);
+    expect(Object.keys(s.map.tiles)).toHaveLength(9 * 30);
     expect(s.party.carried.food + s.party.carried.fuel).toBeLessThanOrEqual(s.party.capacity);
   });
 
   it('has a passable route through the ridge', () => {
-    for (const row of [14, 15, 16]) expect(FIXED_MAP[row]).toContain('P');
+    for (const row of [10, 11, 12]) expect(FIXED_MAP[row]).toContain('P');
   });
 });
