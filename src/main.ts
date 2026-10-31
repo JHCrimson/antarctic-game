@@ -1,7 +1,7 @@
 import { registerSW } from 'virtual:pwa-register';
 import { Store } from './app/store';
-import { fromKey, key, type HexKey } from './core/hex';
-import { TERRAIN, canTransfer, checkMove } from './core/rules';
+import { distance, fromKey, key, type HexKey } from './core/hex';
+import { TERRAIN, canTransfer, checkMove, score } from './core/rules';
 import { newGame, type GameState, type Supplies } from './core/state';
 import { attachPointer } from './input/pointer';
 import { Renderer } from './render/canvas';
@@ -23,6 +23,7 @@ let preview: HexKey | null = null;   // hex shown in the panel; a second tap on 
 let lastLogLength = 0;
 
 const REASONS = {
+  over: 'The expedition is over',
   'off-map': '',
   'not-adjacent': 'Too far: you can only move to a highlighted hex',
   impassable: 'Impassable: find a glacier pass',
@@ -136,9 +137,10 @@ store.subscribe(state => {
   }
   preview = null;
   view.follow(fromKey(state.party.at));
-  if (state.log.length > lastLogLength) showPanel('Accident', state.log[state.log.length - 1], 'event');
+  const fresh = state.log.length > lastLogLength ? state.log.at(-1) : undefined;
+  if (state.status !== 'playing') showResult(state);
+  else if (fresh?.kind === 'accident') showPanel('Accident', fresh.text, 'event');
   else if (state.party.carried.food === 0 && (state.caches[state.party.at]?.food ?? 0) > 0) openSheet();
-  else if (state.party.carried.food === 0) showPanel('Out of food', 'No food here either. Tap Restart to try again.', 'warn');
   else showPreview(state);
   lastLogLength = state.log.length;
   render();
@@ -163,13 +165,68 @@ attachPointer(canvas, {
   drag: dy => { view.scrollBy(dy); render(); },
 });
 
-$('restart').addEventListener('click', () => {
-  if (store.state.turn > 0 && !confirm('Start a new expedition?')) return;
+function startNew(): void {
   lastLogLength = 0;
   sheet.hidden = true;
+  $('result').hidden = true;
+  $('journal').hidden = true;
   store.reset(newGame());
-  showPreview(store.state);
+}
+
+$('restart').addEventListener('click', () => {
+  if (store.state.status === 'playing' && store.state.turn > 0 && !confirm('Start a new expedition?')) return;
+  startNew();
 });
+
+// End of an expedition: a result card over the map.
+function showResult(s: GameState): void {
+  const won = s.status === 'won';
+  const base = s.caches[s.base] ?? { food: 0, fuel: 0 };
+  const { food, fuel } = s.party.carried;
+  const away = distance(fromKey(s.party.at), fromKey(s.pole));
+  $('result-title').textContent = won ? 'You reached the South Pole!' : 'Expedition lost';
+  $('result-summary').textContent = won
+    ? `Your party stood at the pole on turn ${s.turn}.`
+    : `Stranded on turn ${s.turn}, ${away} hexes short of the pole, without the supplies to go on.`;
+  const rows: [string, string][] = [
+    ['Turns taken', String(s.turn)],
+    ['Crates left at base', String(base.food + base.fuel)],
+    ['Crates on the sledge', String(food + fuel)],
+  ];
+  if (won) rows.push(['Score', String(score(s))]);
+  $('result-stats').replaceChildren(...rows.flatMap(([label, value], i) => {
+    const dt = document.createElement('dt');
+    const dd = document.createElement('dd');
+    dt.textContent = label;
+    dd.textContent = value;
+    if (won && i === rows.length - 1) dd.className = 'total';
+    return [dt, dd];
+  }));
+  showPanel(won ? 'You reached the pole' : 'Expedition lost', 'Tap Restart for a new expedition', won ? '' : 'warn');
+  $('result').hidden = false;
+}
+
+function showJournal(): void {
+  const items = [...store.state.log].reverse().map(entry => {
+    const li = document.createElement('li');
+    const turn = document.createElement('span');
+    turn.className = 'turn';
+    turn.textContent = `Turn ${entry.turn}`;
+    const text = document.createElement('span');
+    text.textContent = entry.text;
+    if (entry.kind === 'accident' || entry.kind === 'lost') text.className = 'accident';
+    li.append(turn, text);
+    return li;
+  });
+  $('journal-list').replaceChildren(...items);
+  $('journal-empty').hidden = items.length > 0;
+  $('journal').hidden = false;
+}
+
+$('journal-open').addEventListener('click', showJournal);
+$('journal-close').addEventListener('click', () => { $('journal').hidden = true; });
+$('result-journal').addEventListener('click', showJournal);
+$('result-new').addEventListener('click', startNew);
 
 window.addEventListener('resize', layout);
 showPreview(store.state);

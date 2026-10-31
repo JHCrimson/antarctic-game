@@ -7,6 +7,17 @@ export interface Tile { terrain: Terrain; }
 
 export interface Supplies { food: number; fuel: number; }
 
+export type Status = 'playing' | 'won' | 'lost';
+
+// One line in the expedition journal. Transfers on the same hex and turn are merged into one entry.
+export interface LogEntry {
+  turn: number;
+  kind: 'accident' | 'transfer' | 'won' | 'lost';
+  text: string;
+  at?: HexKey;
+  delta?: Supplies; // transfers only: crates loaded (+) or left behind (-)
+}
+
 export interface GameState {
   version: 1;
   turn: number;
@@ -16,7 +27,8 @@ export interface GameState {
   pole: HexKey;
   party: { at: HexKey; carried: Supplies; capacity: number; };
   caches: Record<HexKey, Supplies>; // includes the home base stores
-  log: string[];                  // events, newest last
+  status: Status;
+  log: LogEntry[];                // journal, newest last
 }
 
 export type Action =
@@ -25,9 +37,9 @@ export type Action =
   // Positive numbers pick up from the cache, negative numbers drop into it.
   | { kind: 'transfer'; food: number; fuel: number };
 
-export const CAPACITY = 30;
-export const STARTING_LOAD: Supplies = { food: 26, fuel: 4 };
-export const BASE_STOCKPILE: Supplies = { food: 120, fuel: 30 }; // includes the starting load
+export const CAPACITY = 40;
+export const STARTING_LOAD: Supplies = { food: 34, fuel: 6 };
+export const BASE_STOCKPILE: Supplies = { food: 160, fuel: 40 }; // includes the starting load
 
 export function newGame(seed = Date.now(), rows: readonly string[] = FIXED_MAP): GameState {
   const cols = rows[0].length;
@@ -47,6 +59,7 @@ export function newGame(seed = Date.now(), rows: readonly string[] = FIXED_MAP):
         fuel: BASE_STOCKPILE.fuel - STARTING_LOAD.fuel,
       },
     },
+    status: 'playing',
     log: [],
   };
 }

@@ -19,13 +19,13 @@ describe('base stores', () => {
   });
 
   it('let you swap food for fuel, but never overfill the sledge', () => {
-    const s = newGame(1); // sledge starts full: 26 + 4 = 30
+    const s = newGame(1); // sledge starts full: 34 + 6 = 40
     expect(canTransfer(s, 1, 0)).toBe(false);
     const lighter = apply(s, { kind: 'transfer', food: -6, fuel: 0 });
-    expect(lighter.party.carried.food).toBe(20);
+    expect(lighter.party.carried.food).toBe(28);
     const swapped = apply(lighter, { kind: 'transfer', food: 0, fuel: 6 });
-    expect(swapped.party.carried).toEqual({ food: 20, fuel: 10 });
-    expect(swapped.caches[s.base]).toEqual({ food: 100, fuel: 20 });
+    expect(swapped.party.carried).toEqual({ food: 28, fuel: 12 });
+    expect(swapped.caches[s.base]).toEqual({ food: 132, fuel: 28 });
   });
 });
 

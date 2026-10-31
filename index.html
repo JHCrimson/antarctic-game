@@ -17,14 +17,28 @@
     <header id="hud">
       <div class="stat"><span class="label">Food</span><span id="food" class="value">0</span></div>
       <div class="stat"><span class="label">Fuel</span><span id="fuel" class="value">0</span></div>
-      <div class="stat"><span class="label">Load</span><span id="load" class="value">0/30</span></div>
+      <div class="stat"><span class="label">Load</span><span id="load" class="value">0/40</span></div>
       <div class="stat"><span class="label">Turn</span><span id="turn" class="value">0</span></div>
       <button id="restart" type="button">Restart</button>
     </header>
-    <footer id="panel" aria-live="polite">
-      <div id="panel-title">Tap a highlighted hex to see what it costs</div>
-      <div id="panel-detail"></div>
+    <footer id="panel">
+      <div id="panel-text" aria-live="polite">
+        <div id="panel-title">Tap a highlighted hex to see what it costs</div>
+        <div id="panel-detail"></div>
+      </div>
+      <button id="journal-open" type="button">Journal</button>
     </footer>
+    <section id="result" class="overlay" hidden aria-labelledby="result-title">
+      <div class="card">
+        <h2 id="result-title"></h2>
+        <p id="result-summary"></p>
+        <dl id="result-stats"></dl>
+        <div class="card-actions">
+          <button id="result-journal" type="button">Journal</button>
+          <button id="result-new" type="button" class="primary">New expedition</button>
+        </div>
+      </div>
+    </section>
     <section id="sheet" hidden aria-labelledby="sheet-title">
       <div class="sheet-head">
         <h2 id="sheet-title">Cache</h2>
@@ -47,6 +61,16 @@
         <span class="sheet-amount" id="sheet-fuel">0</span>
         <button type="button" data-d="1">+1</button>
         <button type="button" data-d="5">+5</button>
+      </div>
+    </section>
+    <section id="journal" class="overlay" hidden aria-labelledby="journal-title">
+      <div class="card">
+        <div class="card-head">
+          <h2 id="journal-title">Expedition journal</h2>
+          <button id="journal-close" type="button" class="primary">Close</button>
+        </div>
+        <ol id="journal-list"></ol>
+        <p id="journal-empty">Nothing yet. Accidents, caches and restocks are recorded here.</p>
       </div>
     </section>
     <script type="module" src="/src/main.ts"></script>
