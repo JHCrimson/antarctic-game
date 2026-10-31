@@ -20,6 +20,7 @@ export interface LogEntry {
 
 export interface GameState {
   version: 1;
+  seed: number;                   // the expedition's number: same seed, same map
   turn: number;
   rng: number;                    // seed for the next random roll
   map: { cols: number; rows: number; tiles: Record<HexKey, Tile>; };
@@ -47,6 +48,7 @@ export function newGame(seed = Date.now(), rows: readonly string[] = FIXED_MAP):
   const base = key(fromOffset(mid, 0));
   return {
     version: 1,
+    seed,
     turn: 0,
     rng: seed | 0,
     map: { cols, rows: rows.length, tiles: parseMap(rows) },

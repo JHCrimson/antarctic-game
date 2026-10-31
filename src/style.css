@@ -149,7 +149,7 @@ button.primary { background: var(--accent); border-color: var(--accent); }
 }
 .card h2 { margin: 0; font-size: 20px; }
 .card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.card-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+.card-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; margin-top: 16px; }
 
 #result-summary { color: var(--hud-quiet); margin: 8px 0 12px; }
 #result-stats { display: grid; grid-template-columns: 1fr auto; gap: 6px 16px; margin: 0; }
@@ -162,3 +162,4 @@ button.primary { background: var(--accent); border-color: var(--accent); }
 #journal-list .turn { color: var(--hud-quiet); font-size: 13px; margin-right: 8px; }
 #journal-list .accident { color: var(--warn); }
 #journal-empty { color: var(--hud-quiet); }
+#journal-map { color: var(--hud-quiet); font-size: 13px; margin: 4px 0 0; }
