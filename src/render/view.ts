@@ -10,10 +10,12 @@ export class View {
   scroll = 0;
   private ox = 0;
   private oy = 0;
+  private bottomInset = 0;
 
   constructor(private cols: number, private rows: number) {}
 
-  resize(width: number, height: number, topInset: number): void {
+  resize(width: number, height: number, topInset: number, bottomInset: number): void {
+    this.bottomInset = bottomInset;
     this.width = width;
     this.height = height;
     this.size = Math.min(MAX_SIZE, width / ((this.cols + 0.5) * SQRT3));
@@ -24,7 +26,7 @@ export class View {
   }
 
   get worldHeight(): number {
-    return this.oy + this.rows * 1.5 * this.size + this.size * 4;
+    return this.oy + this.rows * 1.5 * this.size + this.size * 4 + this.bottomInset;
   }
 
   toScreen(h: Hex): { x: number; y: number } {

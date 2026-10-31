@@ -11,14 +11,20 @@
     <link rel="icon" href="icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <title>Antarctic Expedition</title>
-    
   </head>
   <body>
     <canvas id="map" aria-label="Expedition map"></canvas>
     <header id="hud">
-      <span id="turn">Turn 0</span>
-      <span id="hint">Tap a neighbouring hex to move</span>
+      <div class="stat"><span class="label">Food</span><span id="food" class="value">0</span></div>
+      <div class="stat"><span class="label">Fuel</span><span id="fuel" class="value">0</span></div>
+      <div class="stat"><span class="label">Load</span><span id="load" class="value">0/30</span></div>
+      <div class="stat"><span class="label">Turn</span><span id="turn" class="value">0</span></div>
+      <button id="restart" type="button">Restart</button>
     </header>
+    <footer id="panel" aria-live="polite">
+      <div id="panel-title">Tap a highlighted hex to see what it costs</div>
+      <div id="panel-detail"></div>
+    </footer>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
