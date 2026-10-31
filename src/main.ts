@@ -140,6 +140,7 @@ store.subscribe(state => {
   const fresh = state.log.length > lastLogLength ? state.log.at(-1) : undefined;
   if (state.status !== 'playing') showResult(state);
   else if (fresh?.kind === 'accident') showPanel('Accident', fresh.text, 'event');
+  else if (fresh?.kind === 'pole') showPanel('South Pole reached', 'Now get everyone home to base', 'event');
   else if (state.party.carried.food === 0 && (state.caches[state.party.at]?.food ?? 0) > 0) openSheet();
   else showPreview(state);
   lastLogLength = state.log.length;
@@ -183,11 +184,13 @@ function showResult(s: GameState): void {
   const won = s.status === 'won';
   const base = s.caches[s.base] ?? { food: 0, fuel: 0 };
   const { food, fuel } = s.party.carried;
-  const away = distance(fromKey(s.party.at), fromKey(s.pole));
-  $('result-title').textContent = won ? 'You reached the South Pole!' : 'Expedition lost';
+  const goal = s.party.reachedPole ? s.base : s.pole;
+  const away = distance(fromKey(s.party.at), fromKey(goal));
+  const short = s.party.reachedPole ? 'from home, on the way back from the pole' : 'short of the pole';
+  $('result-title').textContent = won ? 'Home from the South Pole!' : 'Expedition lost';
   $('result-summary').textContent = won
-    ? `Your party stood at the pole on turn ${s.turn}.`
-    : `Stranded on turn ${s.turn}, ${away} hexes short of the pole, without the supplies to go on.`;
+    ? `Your party reached the pole and made it back to base on turn ${s.turn}.`
+    : `Stranded on turn ${s.turn}, ${away} hexes ${short}, without the supplies to go on.`;
   const rows: [string, string][] = [
     ['Turns taken', String(s.turn)],
     ['Crates left at base', String(base.food + base.fuel)],
@@ -202,7 +205,7 @@ function showResult(s: GameState): void {
     if (won && i === rows.length - 1) dd.className = 'total';
     return [dt, dd];
   }));
-  showPanel(won ? 'You reached the pole' : 'Expedition lost', 'Tap Restart for a new expedition', won ? '' : 'warn');
+  showPanel(won ? 'Home from the pole' : 'Expedition lost', 'Tap Restart for a new expedition', won ? '' : 'warn');
   $('result').hidden = false;
 }
 

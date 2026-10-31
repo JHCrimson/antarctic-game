@@ -11,7 +11,7 @@ export const TERRAIN: Record<Terrain, TerrainInfo> = {
   crevasse: { name: 'Crevasse field', cost: { food: 1, fuel: 0 } },
   ridge: { name: 'Mountain ridge', cost: null },
   pass: { name: 'Glacier pass', cost: { food: 2, fuel: 1 } },
-  plateau: { name: 'Polar plateau', cost: { food: 1, fuel: 1 } },
+  plateau: { name: 'Polar plateau', cost: { food: 0, fuel: 1 } },
 };
 
 export const CREVASSE_CHANCE = 0.25;
@@ -76,13 +76,22 @@ export function apply(state: GameState, action: Action): GameState {
   }
 }
 
-// After every action: has the party reached the pole, or run out of ways to go on?
+// After every action: has the party reached the pole, got home, or run out of ways to go on?
+// Winning takes the whole journey: reach the pole, then return to the home base.
 function settle(state: GameState): GameState {
-  if (state.party.at === state.pole) {
+  const { at, reachedPole } = state.party;
+  if (at === state.pole && !reachedPole) {
+    state = {
+      ...state,
+      party: { ...state.party, reachedPole: true },
+      log: [...state.log, { turn: state.turn, kind: 'pole', text: 'Reached the South Pole. Now get everyone home.' }],
+    };
+  }
+  if (at === state.base && reachedPole) {
     return {
       ...state,
       status: 'won',
-      log: [...state.log, { turn: state.turn, kind: 'won', text: `Reached the South Pole. Score ${score(state)}.` }],
+      log: [...state.log, { turn: state.turn, kind: 'won', text: `Home from the South Pole. Score ${score(state)}.` }],
     };
   }
   if (isStranded(state)) {

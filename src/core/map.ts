@@ -10,36 +10,26 @@ export const FIXED_MAP = [
   '.........',
   '..s......',
   '....s..s.', //  5
-  '.s.......',
-  '......s..',
   'xxx...xx.', //    first crevasse band
   '.xx..xxx.',
-  '..x.s..x.', // 10
-  '.........',
+  '..x.s..x.',
   's....s...',
-  '...s....s',
-  'MMPMMMPMM', //    mountain ridge, crossed at two passes
-  'MMPMMMPMM', // 15
+  'MMPMMMPMM', // 10 mountain ridge, crossed at two passes
+  'MMPMMMPMM',
   'MMPMMMPMM',
   '.........',
-  '..s...s..',
   '.x....x..',
-  'xxx.s.xxx', // 20 second crevasse band
+  'xxx.s.xxx', // 15 second crevasse band
   '.xx...xx.',
   '...s.....',
-  '.........',
   '^^^^^^^^^', //    polar plateau from here on
-  '^^^^^^^^^', // 25
   '^^^^^^^^^',
-  '^^^^^^^^^',
+  '^^^^^^^^^', // 20
   '^^s^^^^s^',
   '^^^^^^^^^',
-  '^^^^^^^^^', // 30
   '^^^^^^^^^',
   '^^^^^^^^^',
-  '^s^^^s^^^',
-  '^^^^^^^^^',
-  '^^^^^^^^^', // 35
+  '^s^^^s^^^', // 25
   '^^^^^^^^^',
   '^^^^^^^^^',
   '^^^^^^^^^',
