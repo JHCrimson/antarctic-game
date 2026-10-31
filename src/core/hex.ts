@@ -64,3 +64,17 @@ export function corners(cx: number, cy: number, size: number): [number, number][
   }
   return pts;
 }
+
+// The map wraps east-west like a band around the pole: column `cols` is column 0 again.
+// In axial coordinates that is a shift of q by `cols` in the same row.
+export function wrap(h: Hex, cols: number): Hex {
+  const { col, row } = toOffset(h);
+  return fromOffset(((col % cols) + cols) % cols, row);
+}
+
+export const wrappedNeighbours = (h: Hex, cols: number): Hex[] => neighbours(h).map(n => wrap(n, cols));
+
+// Steps between two hexes, going either way round the band.
+export function wrappedDistance(a: Hex, b: Hex, cols: number): number {
+  return Math.min(...[-cols, 0, cols].map(dq => distance(a, { q: b.q + dq, r: b.r })));
+}

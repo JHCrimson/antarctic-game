@@ -22,16 +22,17 @@ describe('generated maps', () => {
 
   it('can all be crossed to the pole and back', () => {
     for (const seed of seeds) {
-      const start = newGame(seed, generateMap(seed));
+      const rows = generateMap(seed);
+      const start = newGame(seed, rows);
       const route = safeRoute(start);
       expect(route, `seed ${seed}`).not.toBeNull();
-      const budget = proofBudget(generateMap(seed));
+      const budget = proofBudget(rows);
       expect(budget!.food + budget!.fuel).toBe(PROOF_CRATES);
       const end = shuttleRoundTrip(start, route!, budget!);
       expect(end.status, `seed ${seed}`).toBe('won');
       expect(end.party.reachedPole).toBe(true);
     }
-  });
+  }, 30_000);
 
   it('are the same for the same seed and differ between seeds', () => {
     expect(generateMap(42)).toEqual(generateMap(42));

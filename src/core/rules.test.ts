@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fromKey, fromOffset, key, neighbours } from './hex';
+import { fromKey, fromOffset, key } from './hex';
 import { FIXED_MAP } from './map';
 import { apply, checkMove } from './rules';
 import { newGame, type GameState } from './state';
@@ -28,7 +28,7 @@ describe('move', () => {
 
   it('refuses a hex off the map', () => {
     const s = newGame(1);
-    const off = neighbours(fromKey(s.base)).map(key).find(k => !(k in s.map.tiles))!;
+    const off = key({ q: fromKey(s.base).q, r: -1 });
     expect(apply(s, { kind: 'move', to: off })).toBe(s);
   });
 
@@ -91,5 +91,19 @@ describe('newGame', () => {
 
   it('has a passable route through the ridge', () => {
     for (const row of [10, 11, 12]) expect(FIXED_MAP[row]).toContain('P');
+  });
+});
+
+describe('wrapping east-west', () => {
+  it('lets the party walk off the east edge onto the west edge of the same row', () => {
+    const next = apply(game(8, 3), { kind: 'move', to: at(0, 3) });
+    expect(next.party.at).toBe(at(0, 3));
+    expect(next.turn).toBe(1);
+  });
+
+  it('lets the party step diagonally across the seam', () => {
+    expect(checkMove(game(8, 3), at(0, 4)).ok).toBe(true);  // odd row: down-right wraps to column 0
+    expect(checkMove(game(0, 4), at(8, 3)).ok).toBe(true);  // even row: up-left wraps to column 8
+    expect(checkMove(game(8, 3), at(1, 3)).ok).toBe(false); // two steps away even with the wrap
   });
 });

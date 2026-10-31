@@ -1,5 +1,5 @@
-import { fromKey, key, neighbours, type HexKey } from './hex';
-import { apply, checkMove, TERRAIN } from './rules';
+import { type HexKey } from './hex';
+import { apply, checkMove, moveTargets, TERRAIN } from './rules';
 import type { GameState, Supplies } from './state';
 
 const none: Supplies = { food: 0, fuel: 0 };
@@ -17,7 +17,7 @@ export function safeRoute(state: GameState): HexKey[] | null {
     for (const k of open) if (here === undefined || dist.get(k)! < dist.get(here)!) here = k;
     open.delete(here!);
     if (here === state.pole) break;
-    for (const n of neighbours(fromKey(here!)).map(key)) {
+    for (const n of moveTargets(state, here!)) {
       const tile = state.map.tiles[n];
       const cost = tile && tile.terrain !== 'crevasse' ? TERRAIN[tile.terrain].cost : null;
       if (!cost) continue;

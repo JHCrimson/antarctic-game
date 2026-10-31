@@ -1,4 +1,4 @@
-import { fromKey, isNeighbour, key, neighbours, type HexKey } from './hex';
+import { fromKey, key, wrappedDistance, wrappedNeighbours, type HexKey } from './hex';
 import { nextRandom } from './random';
 import type { Action, GameState, LogEntry, Supplies, Terrain } from './state';
 
@@ -21,12 +21,17 @@ export type MoveCheck =
   | { ok: true; cost: Supplies }
   | { ok: false; reason: 'over' | 'off-map' | 'not-adjacent' | 'impassable' | 'no-food' | 'no-fuel'; cost: Supplies | null };
 
+// The hexes next to the party that exist on the map, wrapping round east-west.
+export function moveTargets(state: GameState, from: HexKey = state.party.at): HexKey[] {
+  return wrappedNeighbours(fromKey(from), state.map.cols).map(key).filter(k => k in state.map.tiles);
+}
+
 export function checkMove(state: GameState, to: HexKey): MoveCheck {
   const tile = state.map.tiles[to];
   if (!tile) return { ok: false, reason: 'off-map', cost: null };
   const cost = TERRAIN[tile.terrain].cost;
   if (state.status !== 'playing') return { ok: false, reason: 'over', cost };
-  if (!isNeighbour(fromKey(state.party.at), fromKey(to))) return { ok: false, reason: 'not-adjacent', cost };
+  if (wrappedDistance(fromKey(state.party.at), fromKey(to), state.map.cols) !== 1) return { ok: false, reason: 'not-adjacent', cost };
   if (!cost) return { ok: false, reason: 'impassable', cost };
   const { food, fuel } = state.party.carried;
   if (food < cost.food) return { ok: false, reason: 'no-food', cost };
@@ -109,7 +114,7 @@ export function isStranded(state: GameState): boolean {
   const here = state.caches[state.party.at] ?? { food: 0, fuel: 0 };
   const best = { food: state.party.carried.food + here.food, fuel: state.party.carried.fuel + here.fuel };
   const hopeful: GameState = { ...state, party: { ...state.party, carried: best } };
-  return !neighbours(fromKey(state.party.at)).some(n => checkMove(hopeful, key(n)).ok);
+  return !moveTargets(state).some(n => checkMove(hopeful, n).ok);
 }
 
 // Score for a finished expedition: 10 points per crate left at base or on the sledge, minus 1 per turn.
