@@ -1,4 +1,4 @@
-import { corners, fromKey, neighbours, key } from '../core/hex';
+import { corners, fromKey, neighbours, key, type HexKey } from '../core/hex';
 import type { GameState, Terrain } from '../core/state';
 import type { View } from './view';
 
@@ -14,6 +14,19 @@ const COLOURS = {
 const TERRAIN: Record<Terrain, string> = {
   coast: '#dce8ef',
   ice: '#f7fafc',
+  sastrugi: '#e4eaee',
+  crevasse: '#bcdcf0',
+  ridge: '#7d8790',
+  pass: '#c9c2b4',
+  plateau: '#f3ecdc',
+};
+
+// Simple marks on top of the colour, so terrain reads even without colour vision.
+const MARK = {
+  sastrugi: '#93a5b3',
+  crevasse: '#2a6a99',
+  ridge: '#4b545c',
+  pass: '#7a6f5e',
 };
 
 export class Renderer {
@@ -31,24 +44,30 @@ export class Renderer {
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
-  draw(state: GameState): void {
+  draw(state: GameState, preview: HexKey | null): void {
     const { ctx, view } = this;
     const size = view.size;
     ctx.fillStyle = COLOURS.sea;
     ctx.fillRect(0, 0, view.width, view.height);
 
     const party = fromKey(state.party.at);
-    const moves = new Set(neighbours(party).map(key).filter(k => k in state.map.tiles));
+    const moves = new Set(neighbours(party).map(key).filter(k => k in state.map.tiles && state.map.tiles[k].terrain !== 'ridge'));
 
     for (const [k, tile] of Object.entries(state.map.tiles)) {
       const p = view.toScreen(fromKey(k as keyof typeof state.map.tiles));
       if (p.y < -size * 2 || p.y > view.height + size * 2) continue;
       this.hex(p.x, p.y, size, TERRAIN[tile.terrain], COLOURS.edge, 1);
+      this.mark(tile.terrain, p.x, p.y, size);
     }
 
     for (const k of moves) {
       const p = view.toScreen(fromKey(k));
       this.hex(p.x, p.y, size - 2, 'rgba(47, 127, 216, 0.14)', COLOURS.move, 2);
+    }
+
+    if (preview) {
+      const p = view.toScreen(fromKey(preview));
+      this.hex(p.x, p.y, size - 2, 'rgba(47, 127, 216, 0.35)', COLOURS.move, 4);
     }
 
     this.base(view.toScreen(fromKey(state.base)), size);
@@ -69,6 +88,52 @@ export class Renderer {
     ctx.strokeStyle = stroke;
     ctx.lineWidth = width;
     ctx.stroke();
+  }
+
+  private mark(terrain: Terrain, x: number, y: number, size: number): void {
+    const { ctx } = this;
+    const s = size * 0.4;
+    ctx.lineWidth = 1.5;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    switch (terrain) {
+      case 'sastrugi':
+        for (const dx of [-s * 0.8, 0, s * 0.8]) {
+          ctx.moveTo(x + dx - s * 0.3, y + s * 0.3);
+          ctx.lineTo(x + dx + s * 0.3, y - s * 0.3);
+        }
+        ctx.strokeStyle = MARK.sastrugi;
+        ctx.stroke();
+        break;
+      case 'crevasse':
+        ctx.moveTo(x - s, y - s * 0.2);
+        ctx.lineTo(x - s * 0.4, y + s * 0.3);
+        ctx.lineTo(x + s * 0.1, y - s * 0.3);
+        ctx.lineTo(x + s * 0.6, y + s * 0.25);
+        ctx.lineTo(x + s, y - s * 0.1);
+        ctx.strokeStyle = MARK.crevasse;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        break;
+      case 'ridge':
+        ctx.moveTo(x - s * 1.1, y + s * 0.6);
+        ctx.lineTo(x - s * 0.4, y - s * 0.6);
+        ctx.lineTo(x + s * 0.1, y + s * 0.2);
+        ctx.lineTo(x + s * 0.5, y - s * 0.3);
+        ctx.lineTo(x + s * 1.1, y + s * 0.6);
+        ctx.closePath();
+        ctx.fillStyle = MARK.ridge;
+        ctx.fill();
+        break;
+      case 'pass':
+        ctx.moveTo(x - s * 0.6, y - s * 0.4);
+        ctx.lineTo(x, y + s * 0.3);
+        ctx.lineTo(x + s * 0.6, y - s * 0.4);
+        ctx.strokeStyle = MARK.pass;
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+        break;
+    }
   }
 
   private base(p: { x: number; y: number }, size: number): void {

@@ -18,5 +18,10 @@ export class Store {
     this.listeners.forEach(l => l(next));
   }
 
+  reset(state: GameState): void {
+    this.current = state;
+    this.listeners.forEach(l => l(state));
+  }
+
   subscribe(listener: Listener): void { this.listeners.push(listener); }
 }
