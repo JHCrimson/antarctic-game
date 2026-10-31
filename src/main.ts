@@ -137,7 +137,8 @@ store.subscribe(state => {
   preview = null;
   view.follow(fromKey(state.party.at));
   if (state.log.length > lastLogLength) showPanel('Accident', state.log[state.log.length - 1], 'event');
-  else if (state.party.carried.food === 0) showPanel('Out of food', 'The party cannot go on. Tap Restart to try again.', 'warn');
+  else if (state.party.carried.food === 0 && (state.caches[state.party.at]?.food ?? 0) > 0) openSheet();
+  else if (state.party.carried.food === 0) showPanel('Out of food', 'No food here either. Tap Restart to try again.', 'warn');
   else showPreview(state);
   lastLogLength = state.log.length;
   render();
