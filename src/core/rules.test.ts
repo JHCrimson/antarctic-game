@@ -62,7 +62,7 @@ describe('crevasses', () => {
       const next = apply(game(0, 7, 20, 5, seed), { kind: 'move', to: at(0, 8) });
       if (next.party.carried.food === 17) {
         lost++;
-        expect(next.log.at(-1)).toMatch(/crevasse/);
+        expect(next.log.at(-1)?.text).toMatch(/crevasse/);
       } else {
         expect(next.party.carried.food).toBe(19);
       }
