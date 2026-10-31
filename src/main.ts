@@ -2,7 +2,8 @@ import { registerSW } from 'virtual:pwa-register';
 import { Store } from './app/store';
 import { distance, fromKey, key, type HexKey } from './core/hex';
 import { TERRAIN, canTransfer, checkMove, score } from './core/rules';
-import { newGame, type GameState, type Supplies } from './core/state';
+import { newExpedition } from './core/generate';
+import { type GameState, type Supplies } from './core/state';
 import { attachPointer } from './input/pointer';
 import { Renderer } from './render/canvas';
 import { View } from './render/view';
@@ -15,7 +16,7 @@ const canvas = $('map') as HTMLCanvasElement;
 const panel = $('panel');
 const sheet = $('sheet');
 
-const store = new Store(newGame());
+const store = new Store(newExpedition());
 const view = new View(store.state.map.cols, store.state.map.rows);
 const renderer = new Renderer(canvas, view);
 
@@ -166,12 +167,12 @@ attachPointer(canvas, {
   drag: dy => { view.scrollBy(dy); render(); },
 });
 
-function startNew(): void {
+function startNew(seed?: number): void {
   lastLogLength = 0;
   sheet.hidden = true;
   $('result').hidden = true;
   $('journal').hidden = true;
-  store.reset(newGame());
+  store.reset(newExpedition(seed));
 }
 
 $('restart').addEventListener('click', () => {
@@ -192,6 +193,7 @@ function showResult(s: GameState): void {
     ? `Your party reached the pole and made it back to base on turn ${s.turn}.`
     : `Stranded on turn ${s.turn}, ${away} hexes ${short}, without the supplies to go on.`;
   const rows: [string, string][] = [
+    ['Map', `#${s.seed}`],
     ['Turns taken', String(s.turn)],
     ['Crates left at base', String(base.food + base.fuel)],
     ['Crates on the sledge', String(food + fuel)],
@@ -221,6 +223,7 @@ function showJournal(): void {
     li.append(turn, text);
     return li;
   });
+  $('journal-map').textContent = `Map #${store.state.seed}`;
   $('journal-list').replaceChildren(...items);
   $('journal-empty').hidden = items.length > 0;
   $('journal').hidden = false;
@@ -229,7 +232,8 @@ function showJournal(): void {
 $('journal-open').addEventListener('click', showJournal);
 $('journal-close').addEventListener('click', () => { $('journal').hidden = true; });
 $('result-journal').addEventListener('click', showJournal);
-$('result-new').addEventListener('click', startNew);
+$('result-new').addEventListener('click', () => startNew());
+$('result-again').addEventListener('click', () => startNew(store.state.seed));
 
 window.addEventListener('resize', layout);
 showPreview(store.state);
